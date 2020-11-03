@@ -3,7 +3,7 @@
 #include <time.h>
 #include <ctype.h>
 #include <string.h>
-// #include <omp.h>
+#include <omp.h>
 
 #include "list.h"
 
@@ -11,17 +11,21 @@
 
 int boxSize, rowSize, totalSize;
 
+int ROW(int i) {return i / rowSize;}
+int COL(int i) {return i % rowSize;}
+int BOX(int r, int c) {return r / boxSize * boxSize + c / boxSize;}
+int INT_TO_MASK(int num) {return (1 << (num - 1));}
 
 bool can_solve(int* sudokuGrid);
 int* read_grid(char* argv[]);
 void print_result(int* sudoku);
 
 
-
 int main(int argc, char* argv[])
 {
 	if(argc == 2)
 	{
+		omp_set_num_threads(4);
 		int* sudokuGrid = read_grid(argv);
 
 		if(can_solve(sudokuGrid))
@@ -40,18 +44,77 @@ int main(int argc, char* argv[])
 
 bool can_solve(int* sudokuGrid)
 {
-	// int threadNum = omp_get_max_threads();
-	int threadNum = 1;
+	int threadNum = omp_get_max_threads();
+	printf("%d\n", threadNum);
+	int beginPos = -1;  // the first cell we search
 
 	List** searchListArray = (List**)malloc(threadNum * sizeof(List*));
-	bool** rowMaskArray = (bool**)malloc(threadNum * sizeof(bool*));
-	bool** colMaskArray = (bool**)malloc(threadNum * sizeof(bool*));
-	bool** boxMaskArray = (bool**)malloc(threadNum * sizeof(bool*));
+	// use int as bit mask to help us to judge
+	int** rowMaskArray = (int**)malloc(threadNum * sizeof(int*));
+	int** colMaskArray = (int**)malloc(threadNum * sizeof(int*));
+	int** boxMaskArray = (int**)malloc(threadNum * sizeof(int*));
 
-	bool* originSudokuArray = (bool*)malloc(totalSize * sizeof(bool));
+	bool* originSudokuGrid = (bool*)malloc(totalSize * sizeof(bool));
+	for(int i = 0; i < totalSize; ++i)
+	{
+		if(sudokuGrid[i] > 0)
+			originSudokuGrid[i] = true;
+		else
+		{
+			originSudokuGrid[i] = false;
+			if(beginPos == -1)
+				beginPos = i;
+		}
+	}
+
+	// one thread one group of mask and one search list for saving the state of DFS
+	#pragma omp parallel
+	{
+		int row, col, box, mask;
+		int tid = omp_get_thread_num();
+		searchListArray[tid] = init_list();
+
+		rowMaskArray[tid] = (int*)malloc(rowSize * sizeof(int));
+		colMaskArray[tid] = (int*)malloc(rowSize * sizeof(int));
+		boxMaskArray[tid] = (int*)malloc(rowSize * sizeof(int));
+
+		memset(rowMaskArray[tid], 0, sizeof(rowMaskArray[tid]));
+		memset(colMaskArray[tid], 0, sizeof(colMaskArray[tid]));
+		memset(boxMaskArray[tid], 0, sizeof(boxMaskArray[tid]));
+
+		for(int i = 0; i < totalSize; ++i)
+			if(originSudokuGrid[i])
+			{
+				row = ROW(i);
+				col = COL(i);
+				box = BOX(row, col);
+				mask = INT_TO_MASK(sudokuGrid[i]);
+				rowMaskArray[tid][row] = rowMaskArray[tid][row] | mask;
+				colMaskArray[tid][col] = colMaskArray[tid][col] | mask;
+				boxMaskArray[tid][box] = boxMaskArray[tid][box] | mask;
+			}
+		printf("thread %d\n", tid);
+
+	}
+
+	// parallel the DFS stage
+	// #pragma omp parallel shared(beginPos)
+	// {
+	// 	int tid = omp_get_thread_num();
+
+	// }
 
 	return true;
 
+}
+
+
+bool is_num_valid(int* rowMask, int* colMask, int* boxMask, int row, int col, int num)
+{
+	int mask = INT_TO_MASK(num);
+	return !(rowMask[row] & mask) && 
+		   !(colMask[col] & mask) && 
+		   !(boxMask[BOX(row, col)] & mask);
 }
 
 
