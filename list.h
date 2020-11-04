@@ -1,22 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-
-struct Node 
+typedef struct Node 
 {
 	// if num == -1, the Node is dummy
 	int num;  
 	int cellPosition, cellRow, cellCol;
-	Node* next;
-	Node* prev;
-};
+	struct Node* next;
+	struct Node* prev;
+}Node;
 
 
-struct List
+typedef struct List
 {
-	Node* head;
-	Node* tail;
-};
+	struct Node* head;
+	struct Node* tail;
+}List;
 
 
 Node* new_node(int n, int p, int r, int c);
