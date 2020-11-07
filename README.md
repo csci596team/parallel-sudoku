@@ -30,7 +30,8 @@ Initially, each thread starts at a different state and perform single thread sea
 
 Once a thread is idle (finishing its current work), it tries to find some works from other threads.
 
-![image-20201106173617734](/home/haoliu1117/snap/typora/23/.config/Typora/typora-user-images/image-20201106173617734.png)
+![parallel-dfs](pic/parallel-dfs.png)
+
 
 
 
