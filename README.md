@@ -1,5 +1,3 @@
-[TOC]
-
 # Parallel Sudoku Solver
 
 In 2020 fall CSCI 596 final project, we build a parallel sudoku solver using OpenMP to parallelize backtracking algorithm on Sudoku.
@@ -34,17 +32,27 @@ Once a thread is idle (finishing its current work), it tries to find some works 
 
 ![parallel-dfs](pic/parallel-dfs.png)
 
+#### An example of parallel DFS traversal
+
+![dfs-step1](pic/dfs-step1.png)
+![dfs-step2](pic/dfs-step2.png)
+![dfs-step3](pic/dfs-step3.png)
+![dfs-step4](pic/dfs-step4.png)
+![dfs-step5](pic/dfs-step5.png)
+![dfs-step6](pic/dfs-step6.png)
+![dfs-step7](pic/dfs-step7.png)
+![dfs-step8](pic/dfs-step8.png)
 
 
 #### Race Condition
 
-##### Race condition on to-do list
+##### Race condition on work list
 
-Each thread holds a to-do list to track its current state and record the remaining work. When one thread finishes its work, it tries to find other works from other threads by examining to-do lists of other threads.
+Each thread holds a work list to track its current state and record the remaining work. When one thread finishes its work, it tries to find other works from other threads by examining work lists of other threads.
 
-To-do list will be read and changed by different threads, which cause a race condition.
+Work list will be read and changed by different threads, which cause a race condition.
 
-While maintaining to-do lists, we use `#pragma omp critical` to ensure read and write consistency.
+While maintaining work lists, we use `#pragma omp critical` to ensure read and write consistency.
 
 ##### Race condition on mask updates
 
