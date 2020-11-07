@@ -36,7 +36,17 @@ Once a thread is idle (finishing its current work), it tries to find some works 
 
 #### Race Condition
 
-Each thread holds a to-do list to track its current state and record the remaining work. The 
+##### Race condition on to-do list
+
+Each thread holds a to-do list to track its current state and record the remaining work. When one thread finishes its work, it tries to find other works from other threads by examining to-do lists of other threads.
+
+To-do list will be read and changed by different threads, which cause a race condition.
+
+While maintaining to-do lists, we use `#pragma omp critical` to ensure read and write consistency.
+
+##### Race condition on mask updates
+
+TODO
 
 
 
