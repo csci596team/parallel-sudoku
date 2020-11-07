@@ -5,7 +5,7 @@ In 2020 fall CSCI 596 final project, we build a parallel sudoku solver using Ope
 
 
 ### What is Sudoku
-
+![standard-sudoku-example-from-wiki](pic/sudoku-example.png)
 #### Rules (for standard Sudoku)
 
 1. A standard Sudoku contains 81 cells in a 9 by 9 grid. 
@@ -34,11 +34,32 @@ Once a thread is idle (finishing its current work), it tries to find some works 
 
 
 
+#### Race Condition
+
+Each thread holds a to-do list to track its current state and record the remaining work. The 
+
+
+
+### Experiments and Results
+
+TODO (Execution time, Speed up, Efficiency)
+
+
+
+
+
+### Conclusion
+
+TODO
+
+
 
 ### Run
 
 ```shell
-cmake .
+mkdir build
+cd build
+cmake ..
 make
 ./sudoku-solver <sudoku-file>
 ```
