@@ -1,13 +1,11 @@
 #include "list.h"
 
-Node* new_node(int n, int p, int r, int c)
+Node* new_node(int n, int p)
 {
 	Node* node = (Node*)malloc(sizeof(Node));
 
 	node -> num = n;
-	node -> cellPosition = p;
-	node -> cellRow = r;
-	node -> cellCol = c;
+	node -> pos = p;
 
 	node -> next = NULL;
 	node -> prev = NULL;
@@ -19,8 +17,8 @@ List* init_list()
 {
 	List* list = (List*)malloc(sizeof(List));
 
-	list -> head = new_node(-1, -1, -1, -1);
-	list -> tail = new_node(-1, -1, -1, -1);
+	list -> head = new_node(-1, -1);
+	list -> tail = new_node(-1, -1);
 
 	list -> head -> next = list -> tail;
 	list -> tail -> prev = list -> head;
@@ -84,3 +82,14 @@ Node* pop_tail(List* list)
 	return cur;
 }
 
+int get_tail_pos(List* list)
+{
+	return list -> tail -> prev -> pos;
+}
+
+bool is_empty(List* list)
+{
+	if(list -> head -> next == list -> tail)
+		return true;
+	return false;
+}
