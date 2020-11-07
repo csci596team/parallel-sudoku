@@ -1,4 +1,6 @@
-# parallel-sudoku
+[TOC]
+
+# Parallel Sudoku Solver
 
 In 2020 fall CSCI 596 final project, we build a parallel sudoku solver using OpenMP to parallelize backtracking algorithm on Sudoku.
 
