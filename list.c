@@ -93,3 +93,15 @@ bool is_empty(List* list)
 		return true;
 	return false;
 }
+
+int get_list_size(List* list)
+{
+	int size = 0;
+	Node* cur = list -> head;
+	while(cur -> next != list -> tail)
+	{
+		size++;
+		cur = cur -> next;
+	}
+	return size;
+}

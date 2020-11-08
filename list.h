@@ -33,7 +33,7 @@ Node* pop_tail(List* list);
 
 int get_tail_pos(List* list);
 bool is_empty(List* list);
-
+int get_list_size(List* list);
 
 
 
