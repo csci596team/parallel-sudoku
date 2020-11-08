@@ -22,6 +22,7 @@ bool can_solve(int* originSudoku);
 
 void update_masks(int num, int row, int col, int* rowMask, int* colMask, int* boxMask);
 void reset_masks(int num, int row, int col, int* rowMask, int* colMask, int* boxMask);
+void clear_all_status(int* sudokuGrid, List* searchList, int* rowMask, int* colMask, int* boxMask, int* originSudoku);
 
 bool is_num_valid(int* rowMask, int* colMask, int* boxMask, int row, int col, int num);
 bool is_all_threads_terminate(bool* isThreadTerminate, int threadNum);
@@ -36,7 +37,7 @@ int main(int argc, char* argv[])
 {
 	if(argc == 2)
 	{
-		omp_set_num_threads(8);
+		omp_set_num_threads(2);
 		int* originSudoku = read_grid(argv);
 		print_result(originSudoku);
 
@@ -95,6 +96,7 @@ bool can_solve(int* originSudoku)
 		memset(rowMaskArray[tid], 0, rowSize * sizeof(int));
 		memset(colMaskArray[tid], 0, rowSize * sizeof(int));
 		memset(boxMaskArray[tid], 0, rowSize * sizeof(int));
+		memset(sudokuArray[tid], 0, totalSize * sizeof(int));
 
 		for(int i = 0; i < totalSize; ++i)
 			if(originSudoku[i] > 0)
@@ -122,6 +124,8 @@ bool can_solve(int* originSudoku)
 		// If there are no more status to search, thread will look for work from other threads
 		#pragma omp for nowait schedule(dynamic)
 		for(int startNum = 1; startNum <= rowSize; ++startNum)
+		{
+			printf("%d!!!!!!!!!!!!!!!!!!!!!!\n", startNum);
 			if(is_num_valid(rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], 
 				ROW(startPos), COL(startPos), startNum))
 			{
@@ -147,10 +151,19 @@ bool can_solve(int* originSudoku)
 				}
 				else
 				{
-					printf("false\n");
+					clear_all_status(sudokuArray[tid], searchListArray[tid], rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], originSudoku);
+					print_result(sudokuArray[tid]);
 					isThreadTerminate[tid] = true;
 				}
 			}
+			
+		}
+
+		for(int i = 0; i < threadNum; ++i)
+				if(isThreadTerminate[i])
+					printf("%d ~~~~", i);
+
+		isThreadTerminate[tid] = true;
 
 		// idle thread will search for work from other thread list
 		while(true)
@@ -158,7 +171,10 @@ bool can_solve(int* originSudoku)
 			if(isSolved)
 				break;
 
-			printf("robbbbbbbbbbbbbbbb\n");
+			// printf("robbbbbbbbbbbbbbbb\n");
+			// for(int i = 0; i < threadNum; ++i)
+			// 	if(isThreadTerminate[i])
+			// 		printf("%d ", i);
 
 			Node* robbedNode;
 			#pragma omp critical(list)
@@ -167,6 +183,7 @@ bool can_solve(int* originSudoku)
 			// DFS from robbed node
 			if(robbedNode != NULL)
 			{
+				printf("not null\n");
 				#pragma omp critical(list)
 				insert_head(searchListArray[tid], robbedNode);
 
@@ -183,6 +200,8 @@ bool can_solve(int* originSudoku)
 					}
 
 				}
+				else
+					clear_all_status(sudokuArray[tid], searchListArray[tid], rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], originSudoku);
 
 			}
 			// check whether all the thread have finished their job
@@ -240,7 +259,7 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 		// other thread have already found the solution
 		if(isSolved)
 		{
-			printf("-----\n");
+			printf("Solved!\n");
 			return true;
 		}
 
@@ -284,15 +303,12 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 				{
 					printf("empty!!!!!!!!!!!!!!!\n");
 					// reset the mask and sudoku
-					while(curPos >= startPos)
-					{
+					for(int pos = curPos - 1; pos >= startPos; --pos)
 						if(originSudoku[curPos] == 0)
 						{
 							reset_masks(sudokuGrid[curPos], row, col, rowMask, colMask, boxMask);
 							sudokuGrid[curPos] = 0;
 						}
-						curPos--;
-					}
 					return 0;
 				}
 				// backtracking
@@ -394,6 +410,16 @@ void reset_masks(int num, int row, int col, int* rowMask, int* colMask, int* box
 	rowMask[row] = rowMask[row] ^ mask;
 	colMask[col] = colMask[col] ^ mask;
 	boxMask[box] = boxMask[box] ^ mask;
+}
+
+void clear_all_status(int* sudokuGrid, List* searchList, int* rowMask, int* colMask, int* boxMask, int* originSudoku)
+{
+	for(int i = 0; i < totalSize; ++i)
+		if(originSudoku[i] == 0 && sudokuGrid[i] != 0)
+		{
+			reset_masks(sudokuGrid[i], ROW(i), COL(i), rowMask, colMask, boxMask);
+			sudokuGrid[i] = 0;
+		}
 }
 
 
