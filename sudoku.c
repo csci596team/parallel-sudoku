@@ -10,7 +10,7 @@
 
 #define MAX_LINE 1024
 
-int boxSize, rowSize, totalSize;
+int boxSize, rowSize, totalSize, totalThreads;
 bool isSolved = false;
 
 int ROW(int i) {return i / rowSize;}
@@ -35,11 +35,14 @@ void print_result(int* sudoku);
 
 int main(int argc, char* argv[])
 {
-	if(argc == 2)
+	if(argc == 3)
 	{
-		omp_set_num_threads(2);
+		double cpu1 = omp_get_wtime();
+
 		int* originSudoku = read_grid(argv);
 		print_result(originSudoku);
+
+		omp_set_num_threads(totalThreads);
 
 		if(can_solve(originSudoku))
 			print_result(originSudoku);
@@ -47,6 +50,9 @@ int main(int argc, char* argv[])
 			printf("Sudoku not valid.\n");
 
 		free(originSudoku);
+
+		double cpu2 = omp_get_wtime();
+		printf("Total Time Used %f \n", cpu2 - cpu1);
 	} 
 	else
 		printf("invalid argument.\n");
@@ -114,10 +120,10 @@ bool can_solve(int* originSudoku)
 	{
 		int tid = omp_get_thread_num();
 
-		for(int startNum = 1; startNum <= rowSize; ++startNum)
-			if(is_num_valid(rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], 
-				ROW(startPos), COL(startPos), startNum))
-			printf("%d ", startNum);
+		// for(int startNum = 1; startNum <= rowSize; ++startNum)
+		// 	if(is_num_valid(rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], 
+		// 		ROW(startPos), COL(startPos), startNum))
+		// 	printf("%d ", startNum);
 
 		// Each thread begin parallel on startPos with different value
 		// Then each thread begin to DFS, at least one thread will get valid result
@@ -125,12 +131,12 @@ bool can_solve(int* originSudoku)
 		#pragma omp for nowait schedule(dynamic)
 		for(int startNum = 1; startNum <= rowSize; ++startNum)
 		{
-			printf("%d!!!!!!!!!!!!!!!!!!!!!!\n", startNum);
+			// printf("%d!!!!!!!!!!!!!!!!!!!!!!\n", startNum);
 			if(is_num_valid(rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], 
 				ROW(startPos), COL(startPos), startNum))
 			{
 				Node* searchNode = new_node(startNum, startPos);
-				printf("%d--------------------------------- \n", startNum);
+				// printf("%d--------------------------------- \n", startNum);
 
 				//push first state into DFS list, the list operation should be critical
 				#pragma omp critical(list)
@@ -152,16 +158,12 @@ bool can_solve(int* originSudoku)
 				else
 				{
 					clear_all_status(sudokuArray[tid], searchListArray[tid], rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], originSudoku);
-					print_result(sudokuArray[tid]);
+					// print_result(sudokuArray[tid]);
 					isThreadTerminate[tid] = true;
 				}
 			}
 			
 		}
-
-		for(int i = 0; i < threadNum; ++i)
-				if(isThreadTerminate[i])
-					printf("%d ~~~~", i);
 
 		isThreadTerminate[tid] = true;
 
@@ -171,10 +173,11 @@ bool can_solve(int* originSudoku)
 			if(isSolved)
 				break;
 
-			// printf("robbbbbbbbbbbbbbbb\n");
+			printf("round robin for robbing\n");
 			// for(int i = 0; i < threadNum; ++i)
 			// 	if(isThreadTerminate[i])
-			// 		printf("%d ", i);
+			// 		printf("%d | ", i);
+			// printf("\n");
 
 			Node* robbedNode;
 			#pragma omp critical(list)
@@ -183,7 +186,7 @@ bool can_solve(int* originSudoku)
 			// DFS from robbed node
 			if(robbedNode != NULL)
 			{
-				printf("not null\n");
+				printf("rob successful\n");
 				#pragma omp critical(list)
 				insert_head(searchListArray[tid], robbedNode);
 
@@ -210,7 +213,7 @@ bool can_solve(int* originSudoku)
 			{
 				for(int i = 0; i < threadNum; ++i)
 					if(isThreadTerminate[i])
-						printf("%d ", i);
+						printf("%d (%d) ", i, get_list_size(searchListArray[i]));
 				break;
 			}
 		}
@@ -272,7 +275,7 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 			for(int num = 1; num <= rowSize; ++num)
 				if(is_num_valid(rowMask, colMask, boxMask, row, col, num))
 				{
-					printf("valid: %d\n", num);
+					// printf("valid: %d\n", num);
 					// keep searching the first valid num
 					if(first_valid_num == -1)
 						first_valid_num = num;
@@ -283,17 +286,18 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 						#pragma omp critical(list)
 						insert_head(searchList, newNode);
 
-						printf("list size %d\n", get_list_size(searchList));
+						// printf("list size %d\n", get_list_size(searchList));
 					}
 				}
-			printf("curPos: %d\n", curPos);
-			printf("first num %d\n", first_valid_num);
+			// printf("curPos: %d\n", curPos);
+			// printf("first num %d\n", first_valid_num);
+
 			// write the valid num into sudoku, search next pos
 			if(first_valid_num != -1)
 			{
 				update_masks(first_valid_num, row, col, rowMask, colMask, boxMask);
 				sudokuGrid[curPos] = first_valid_num;
-				print_result(sudokuGrid);
+				// print_result(sudokuGrid);
 			}
 			// if no valid number, the previous step must be wrong, need backtracking
 			else
@@ -303,12 +307,14 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 				{
 					printf("empty!!!!!!!!!!!!!!!\n");
 					// reset the mask and sudoku
-					for(int pos = curPos - 1; pos >= startPos; --pos)
-						if(originSudoku[curPos] == 0)
-						{
-							reset_masks(sudokuGrid[curPos], row, col, rowMask, colMask, boxMask);
-							sudokuGrid[curPos] = 0;
-						}
+
+					// for(int pos = curPos - 1; pos >= startPos; --pos)
+					// 	if(originSudoku[pos] == 0)
+					// 	{
+					// 		reset_masks(sudokuGrid[pos], row, col, rowMask, colMask, boxMask);
+					// 		sudokuGrid[pos] = 0;
+					// 	}
+
 					return 0;
 				}
 				// backtracking
@@ -331,7 +337,7 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 					update_masks(prevNode -> num, ROW(curPos), COL(curPos), rowMask, colMask, boxMask);
 					sudokuGrid[curPos] = prevNode -> num;
 
-					printf("back pos: %d\n", curPos);
+					// printf("back pos: %d\n", curPos);
 				}
 			}
 		}
@@ -382,7 +388,7 @@ Node* rob_work(int curThread, List** searchListArray, int** sudokuArray, int** r
 			if(originSudoku[i] == 0)
 			{
 				reset_masks(sudokuArray[curThread][i], ROW(i), COL(i), rowMaskArray[curThread], colMaskArray[curThread], boxMaskArray[curThread]);
-				sudokuArray[curThread][i];
+				sudokuArray[curThread][i] = 0;
 			}
 	}
 
@@ -443,6 +449,8 @@ bool is_all_threads_terminate(bool* isThreadTerminate, int threadNum)
 
 int* read_grid(char* argv[])
 {
+	totalThreads = atoi(argv[2]);
+
 	FILE* f;
 	if((f = fopen(argv[1], "r")) == NULL)
 	{
