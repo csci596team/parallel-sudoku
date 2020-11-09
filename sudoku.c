@@ -9,9 +9,11 @@
 #include "list.h"
 
 #define MAX_LINE 1024
+#define MAX_THREADS 16
 
 int boxSize, rowSize, totalSize, totalThreads;
 bool isSolved = false;
+omp_lock_t conditionLocks[MAX_THREADS];
 
 int ROW(int i) {return i / rowSize;}
 int COL(int i) {return i % rowSize;}
@@ -43,6 +45,9 @@ int main(int argc, char* argv[])
 		print_result(originSudoku);
 
 		omp_set_num_threads(totalThreads);
+		// use omp locks to create critical sections for each search list
+		for(int i = 0; i < totalThreads; ++i)
+			omp_init_lock(&conditionLocks[i]);
 
 		if(can_solve(originSudoku))
 			print_result(originSudoku);
@@ -139,7 +144,6 @@ bool can_solve(int* originSudoku)
 				// printf("%d--------------------------------- \n", startNum);
 
 				//push first state into DFS list, the list operation should be critical
-				#pragma omp critical(list)
 				insert_head(searchListArray[tid], searchNode);
 
 				if(dfs(searchListArray[tid], sudokuArray[tid], rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], originSudoku))
@@ -152,12 +156,19 @@ bool can_solve(int* originSudoku)
 						for(int i = 0; i < totalSize; ++i)
 							originSudoku[i] = sudokuArray[tid][i];
 						printf("true\n");
+
+						for(int i = 0; i < threadNum; ++i)
+							if(isThreadTerminate[i])
+								printf("%d | ", i);
+						printf("\n");
 					}
 
 				}
 				else
 				{
+					omp_set_lock(&conditionLocks[tid]);
 					clear_all_status(sudokuArray[tid], searchListArray[tid], rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], originSudoku);
+					omp_unset_lock(&conditionLocks[tid]);
 					// print_result(sudokuArray[tid]);
 					isThreadTerminate[tid] = true;
 				}
@@ -180,14 +191,13 @@ bool can_solve(int* originSudoku)
 			// printf("\n");
 
 			Node* robbedNode;
-			#pragma omp critical(list)
+			// #pragma omp critical(list)  //TODO
 			robbedNode = rob_work(tid, searchListArray, sudokuArray, rowMaskArray, colMaskArray, boxMaskArray, originSudoku);
 
 			// DFS from robbed node
 			if(robbedNode != NULL)
 			{
 				printf("rob successful\n");
-				#pragma omp critical(list)
 				insert_head(searchListArray[tid], robbedNode);
 
 				if(dfs(searchListArray[tid], sudokuArray[tid], rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], originSudoku))
@@ -200,11 +210,20 @@ bool can_solve(int* originSudoku)
 						for(int i = 0; i < totalSize; ++i)
 							originSudoku[i] = sudokuArray[tid][i];
 						printf("true\n");
+
+						for(int i = 0; i < threadNum; ++i)
+							if(isThreadTerminate[i])
+								printf("%d | ", i);
+						printf("\n");
 					}
 
 				}
 				else
+				{
+					omp_set_lock(&conditionLocks[tid]);
 					clear_all_status(sudokuArray[tid], searchListArray[tid], rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], originSudoku);
+					omp_unset_lock(&conditionLocks[tid]);
+				}
 
 			}
 			// check whether all the thread have finished their job
@@ -241,16 +260,20 @@ bool can_solve(int* originSudoku)
 
 bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* boxMask, int* originSudoku)
 {
+	int tid = omp_get_thread_num();
+
 	// get the initial search state
-	Node* searchNode;
-	#pragma omp critical(list)
-	searchNode = pop_head(searchList);
+	Node* searchNode = pop_head(searchList);
+	if(searchNode == NULL)  // searchNode may robbed by others
+		return false;
 
 	int startPos = searchNode -> pos;
 
 	// set the first state
+	omp_set_lock(&conditionLocks[tid]);
 	sudokuGrid[startPos] = searchNode -> num;
 	update_masks(searchNode -> num, ROW(startPos), COL(startPos), rowMask, colMask, boxMask);
+	omp_unset_lock(&conditionLocks[tid]);
 
 	int row, col;
 	int curPos = startPos + 1;
@@ -283,21 +306,23 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 					else
 					{
 						Node* newNode = new_node(num, curPos);
-						#pragma omp critical(list)
 						insert_head(searchList, newNode);
 
 						// printf("list size %d\n", get_list_size(searchList));
 					}
 				}
-			// printf("curPos: %d\n", curPos);
-			// printf("first num %d\n", first_valid_num);
+			printf("curPos: %d\n", curPos);
+			printf("first num %d\n", first_valid_num);
 
 			// write the valid num into sudoku, search next pos
 			if(first_valid_num != -1)
 			{
+				omp_set_lock(&conditionLocks[tid]);
 				update_masks(first_valid_num, row, col, rowMask, colMask, boxMask);
 				sudokuGrid[curPos] = first_valid_num;
-				// print_result(sudokuGrid);
+				omp_unset_lock(&conditionLocks[tid]);
+
+				print_result(sudokuGrid);
 			}
 			// if no valid number, the previous step must be wrong, need backtracking
 			else
@@ -321,22 +346,25 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 				else 
 				{
 					// fetch a node from search list
-					Node* prevNode;
-					#pragma omp critical(list)
-					prevNode = pop_head(searchList);
+					Node* prevNode = pop_head(searchList);
 
 					// reset the status from current to the target
+					omp_set_lock(&conditionLocks[tid]);
 					for(int pos = curPos - 1; pos >= prevNode -> pos; --pos) // curPos is empty
 						if(originSudoku[pos] == 0)
 						{
 							reset_masks(sudokuGrid[pos], ROW(pos), COL(pos), rowMask, colMask, boxMask);
 							sudokuGrid[pos] = 0;
 						}
+					omp_unset_lock(&conditionLocks[tid]);
+
 					// set the target state
 					curPos = prevNode -> pos;
+
+					omp_set_lock(&conditionLocks[tid]);
 					update_masks(prevNode -> num, ROW(curPos), COL(curPos), rowMask, colMask, boxMask);
 					sudokuGrid[curPos] = prevNode -> num;
-
+					omp_unset_lock(&conditionLocks[tid]);
 					// printf("back pos: %d\n", curPos);
 				}
 			}
@@ -359,21 +387,24 @@ Node* rob_work(int curThread, List** searchListArray, int** sudokuArray, int** r
 	{	
 		// find a condition which is closest to the search root
 		// in order not to communicate too much
-		if(!is_empty(searchListArray[tid]) && 
-			get_tail_pos(searchListArray[tid]) < minPos)
+
+		robbedNode = pop_tail(searchListArray[tid]);
+		if(robbedNode != NULL)  
 		{
-			minPos = get_tail_pos(searchListArray[tid]);
 			robbedThread = tid;
+			break;
 		}
+		
 	}
 
 	// if there is a valid node
 	if(robbedThread != -1)
 	{
-		#pragma omp critical(rob)
-		robbedNode = pop_tail(searchListArray[robbedThread]);
+		// robbedNode = pop_tail(searchListArray[robbedThread]);
 
 		// copy the mask and sudoku from robbed thread
+		omp_set_lock(&conditionLocks[robbedThread]);
+
 		for(int i = 0; i < totalSize; ++i)
 			sudokuArray[curThread][i] = sudokuArray[robbedThread][i];
 		for(int i = 0; i < rowSize; ++i)
@@ -383,13 +414,18 @@ Node* rob_work(int curThread, List** searchListArray, int** sudokuArray, int** r
 			boxMaskArray[curThread][i] = boxMaskArray[robbedThread][i];
 		}
 
+		omp_unset_lock(&conditionLocks[robbedThread]);
+
 		// reset the status ahead of robbed node status
+		// omp_set_lock(&conditionLocks[curThread]);
+
 		for(int i = totalSize - 1; i >= robbedNode -> pos; --i)
 			if(originSudoku[i] == 0)
 			{
 				reset_masks(sudokuArray[curThread][i], ROW(i), COL(i), rowMaskArray[curThread], colMaskArray[curThread], boxMaskArray[curThread]);
 				sudokuArray[curThread][i] = 0;
 			}
+		// omp_unset_lock(&conditionLocks[curThread]);
 	}
 
 	return robbedNode;
@@ -450,6 +486,11 @@ bool is_all_threads_terminate(bool* isThreadTerminate, int threadNum)
 int* read_grid(char* argv[])
 {
 	totalThreads = atoi(argv[2]);
+	if(totalThreads > MAX_THREADS)
+	{
+		printf("threads number beyond the threshold, max %d.\n", MAX_THREADS);
+		exit(1);
+	}
 
 	FILE* f;
 	if((f = fopen(argv[1], "r")) == NULL)

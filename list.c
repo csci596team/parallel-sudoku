@@ -17,6 +17,8 @@ List* init_list()
 {
 	List* list = (List*)malloc(sizeof(List));
 
+	omp_init_lock(&list -> lock);
+
 	list -> head = new_node(-1, -1);
 	list -> tail = new_node(-1, -1);
 
@@ -28,6 +30,8 @@ List* init_list()
 
 void clear_list(List* list)
 {
+	omp_set_lock(&list -> lock);
+
 	Node* cur = list -> head -> next;
 	while(cur)
 	{
@@ -38,28 +42,40 @@ void clear_list(List* list)
 
 	list -> tail -> prev = list -> head;
 
+	omp_unset_lock(&list -> lock);
+
 }
 
 void insert_head(List* list, Node* node)
 {
+	omp_set_lock(&list -> lock);
+
 	node -> next = list -> head -> next;
 	node -> prev = list -> head;
 
 	list -> head -> next -> prev = node;
 	list -> head -> next = node;
+
+	omp_unset_lock(&list -> lock);
 }
 
 void insert_tail(List* list, Node* node)
 {
+	omp_set_lock(&list -> lock);
+
 	node -> next = list -> tail;
 	node -> prev = list -> tail -> prev;
 
 	list -> tail -> prev -> next = node;
 	list -> tail -> prev = node;
+
+	omp_unset_lock(&list -> lock);
 }
 
 Node* pop_head(List* list)
 {
+	omp_set_lock(&list -> lock);
+
 	if(list -> head -> next == list -> tail)
 		return NULL;
 
@@ -67,11 +83,15 @@ Node* pop_head(List* list)
 	cur -> next -> prev = list -> head;
 	list -> head -> next = cur -> next;
 
+	omp_unset_lock(&list -> lock);
+
 	return cur;
 }
 
 Node* pop_tail(List* list)
 {
+	omp_set_lock(&list -> lock);
+
 	if(list -> tail -> prev == list -> head)
 		return NULL;
 
@@ -79,12 +99,9 @@ Node* pop_tail(List* list)
 	cur -> prev -> next = list -> tail;
 	list -> tail -> prev = cur -> prev;
 
-	return cur;
-}
+	omp_unset_lock(&list -> lock);
 
-int get_tail_pos(List* list)
-{
-	return list -> tail -> prev -> pos;
+	return cur;
 }
 
 bool is_empty(List* list)

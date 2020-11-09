@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <omp.h>
 
 
 typedef struct Node 
@@ -17,6 +18,7 @@ typedef struct List
 {
 	struct Node* head;
 	struct Node* tail;
+	omp_lock_t lock;
 }List;
 
 
@@ -31,7 +33,6 @@ void insert_tail(List* list, Node* node);
 Node* pop_head(List* list);
 Node* pop_tail(List* list);
 
-int get_tail_pos(List* list);
 bool is_empty(List* list);
 int get_list_size(List* list);
 
