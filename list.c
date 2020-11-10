@@ -77,7 +77,10 @@ Node* pop_head(List* list)
 	omp_set_lock(&list -> lock);
 
 	if(list -> head -> next == list -> tail)
+	{
+		omp_unset_lock(&list -> lock);
 		return NULL;
+	}
 
 	Node* cur = list -> head -> next;
 	cur -> next -> prev = list -> head;
@@ -93,7 +96,10 @@ Node* pop_tail(List* list)
 	omp_set_lock(&list -> lock);
 
 	if(list -> tail -> prev == list -> head)
+	{
+		omp_unset_lock(&list -> lock);
 		return NULL;
+	}
 
 	Node* cur = list -> tail -> prev;
 	cur -> prev -> next = list -> tail;

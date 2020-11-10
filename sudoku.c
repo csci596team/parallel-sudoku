@@ -125,11 +125,6 @@ bool can_solve(int* originSudoku)
 	{
 		int tid = omp_get_thread_num();
 
-		// for(int startNum = 1; startNum <= rowSize; ++startNum)
-		// 	if(is_num_valid(rowMaskArray[tid], colMaskArray[tid], boxMaskArray[tid], 
-		// 		ROW(startPos), COL(startPos), startNum))
-		// 	printf("%d ", startNum);
-
 		// Each thread begin parallel on startPos with different value
 		// Then each thread begin to DFS, at least one thread will get valid result
 		// If there are no more status to search, thread will look for work from other threads
@@ -156,11 +151,6 @@ bool can_solve(int* originSudoku)
 						for(int i = 0; i < totalSize; ++i)
 							originSudoku[i] = sudokuArray[tid][i];
 						printf("true\n");
-
-						for(int i = 0; i < threadNum; ++i)
-							if(isThreadTerminate[i])
-								printf("%d | ", i);
-						printf("\n");
 					}
 
 				}
@@ -184,15 +174,8 @@ bool can_solve(int* originSudoku)
 			if(isSolved)
 				break;
 
-			printf("round robin for robbing\n");
-			// for(int i = 0; i < threadNum; ++i)
-			// 	if(isThreadTerminate[i])
-			// 		printf("%d | ", i);
-			// printf("\n");
-
-			Node* robbedNode;
-			// #pragma omp critical(list)  //TODO
-			robbedNode = rob_work(tid, searchListArray, sudokuArray, rowMaskArray, colMaskArray, boxMaskArray, originSudoku);
+			// printf("round robin for robbing\n");
+			Node* robbedNode = rob_work(tid, searchListArray, sudokuArray, rowMaskArray, colMaskArray, boxMaskArray, originSudoku);
 
 			// DFS from robbed node
 			if(robbedNode != NULL)
@@ -211,10 +194,6 @@ bool can_solve(int* originSudoku)
 							originSudoku[i] = sudokuArray[tid][i];
 						printf("true\n");
 
-						for(int i = 0; i < threadNum; ++i)
-							if(isThreadTerminate[i])
-								printf("%d | ", i);
-						printf("\n");
 					}
 
 				}
@@ -311,8 +290,8 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 						// printf("list size %d\n", get_list_size(searchList));
 					}
 				}
-			printf("curPos: %d\n", curPos);
-			printf("first num %d\n", first_valid_num);
+			// printf("curPos: %d\n", curPos);
+			// printf("first num %d\n", first_valid_num);
 
 			// write the valid num into sudoku, search next pos
 			if(first_valid_num != -1)
@@ -322,7 +301,7 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 				sudokuGrid[curPos] = first_valid_num;
 				omp_unset_lock(&conditionLocks[tid]);
 
-				print_result(sudokuGrid);
+				// print_result(sudokuGrid);
 			}
 			// if no valid number, the previous step must be wrong, need backtracking
 			else
@@ -331,15 +310,6 @@ bool dfs(List* searchList, int* sudokuGrid, int* rowMask, int* colMask, int* box
 				if(is_empty(searchList))
 				{
 					printf("empty!!!!!!!!!!!!!!!\n");
-					// reset the mask and sudoku
-
-					// for(int pos = curPos - 1; pos >= startPos; --pos)
-					// 	if(originSudoku[pos] == 0)
-					// 	{
-					// 		reset_masks(sudokuGrid[pos], row, col, rowMask, colMask, boxMask);
-					// 		sudokuGrid[pos] = 0;
-					// 	}
-
 					return 0;
 				}
 				// backtracking
