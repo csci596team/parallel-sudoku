@@ -50,27 +50,26 @@ Once a thread is idle (finishing its current work), it tries to find some works 
 
 Each thread holds a work list to track its current state and record the remaining work. When one thread finishes its work, it tries to find other works from other threads by examining work lists of other threads.
 
-Work list will be read and changed by different threads, which cause a race condition.
+Work list will be read and changed by different threads when a robbery occurs, which cause a race condition.
 
-While maintaining work lists, we use `#pragma omp critical` to ensure read and write consistency.
+For each work list, we use mutex to ensure read-after-write consistency.
 
 ##### Race condition on mask updates
 
-TODO
+Once robbery occurred, one thread needs to copy masks from another thread. Data consistency must be guaranteed during the copy process. Thus, a mutex for each thread is needed.
 
 
 
 ### Experiments and Results
 
-TODO (Execution time, Speed up, Efficiency)
+**Execution Time for 16x16 Sudoku**
+![exec_time_16](pic/exec_time_16.png)
 
+**Speed Up for 16x16 Sudoku**
+![speed_up_16](pic/speed_up_16.png)
 
-
-
-
-### Conclusion
-
-TODO
+**Efficiency for 16x16 Sudoku**
+![efficiency_16](pic/efficiency_16.png)
 
 
 
