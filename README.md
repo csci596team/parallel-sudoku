@@ -51,13 +51,13 @@ Once a thread is idle (finishing its current work), it tries to find some works 
 Each thread holds a work list to track its current state and record the remaining work. When one thread finishes its work, it tries to find other works from other threads by examining work lists of other threads.
 
 Work list will be read and changed by different threads when a robbery occurs, which cause a race condition.
+ 
+Work list is designed as an concurrent doubly linked list, and we use openmp_lock to ensure read-after-write consistency.
 
-For each work list, we use mutex to ensure read-after-write consistency.
+##### Race condition on masks updates
 
-##### Race condition on mask updates
-
-Once robbery occurred, one thread needs to copy masks from another thread. Data consistency must be guaranteed during the copy process. Thus, a mutex for each thread is needed.
-
+Once robbery occurred, one thread needs to copy masks from another thread. Data consistency must be guaranteed during the copy process. 
+Thus, a openmp_lock for each thread's masks is needed.
 
 
 ### Experiments and Results
