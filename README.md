@@ -99,6 +99,10 @@ Thus, a openmp_lock for each thread's masks is needed.
 
 Finally we have done scalability analysis of this sudoku solver. Due to 9 by 9 sudoku is way to fast to be solved, we conduct experiment on 16 by 16 sudoku.
 
+Our sudoku solver achieves linear speedup when thread number is no more than 6, in fact even superlinear speedup on some tests with multiple solutions. The superlinear speedup was possible because with multiple threads, the solver could arrive at one solution faster, and kill all the other threads before they did extra work. 
+
+When the thread number is bigger than 6, the speed up will be tapered off, because the solver was so fast that the overhead of spawning threads outweigh the benefits of parallelization.
+
 **Execution Time for 16x16 Sudoku**
 
 ![exec_time_16](pic/exec_time_16.png)
