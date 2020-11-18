@@ -90,7 +90,7 @@ Other threads will rob the state from the tail, which is close to the search roo
 
 Each thread has a set of state masks and sudoku board for doing DFS and backtracking.
 
-### An example of parallel DFS traversal
+## An example of parallel DFS traversal
 
 ![dfs-step1](pic/dfs-step1.png)
 ![dfs-step2](pic/dfs-step2.png)
