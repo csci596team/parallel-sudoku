@@ -1,6 +1,6 @@
 # Parallel Sudoku Solver
 
-In 2020 fall CSCI 596 final project, we build a parallel sudoku solver using OpenMP to parallelize backtracking algorithm on Sudoku.
+In 2020 fall CSCI 596 final project, we build a parallel sudoku solver using OpenMP to parallelize backtracking algorithm on Sudoku. 
 
 ### How to Run the Sudoku Sovler
 
@@ -25,7 +25,11 @@ Run the sudoku-solver to solve <sudoku-file> puzzle.
 
 
 ### What is Sudoku
+Sudoku is a logic-based number puzzle featuring a 9x9 board divided into rows, columns, and 3x3 square blocks. The goal of the game is to fill each row, column, and block with unique numbers in the range 1 through 9. Variations of sudoku have used larger boards, such as hexadoku: sudoku with a 16x16 board.
+
 ![standard-sudoku-example-from-wiki](pic/sudoku-example.png)
+
+
 #### Rules (for standard Sudoku)
 
 1. A standard Sudoku contains 81 cells in a 9 by 9 grid. 
