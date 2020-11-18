@@ -57,13 +57,13 @@ Once a thread is idle (finishing its current work), it tries to find some works 
 
 ### Data Structure we used for enabling parallelization
 
-1. Concurrent Doubly Linked List (work list)
+**1. Concurrent Doubly Linked List (work list)**
 
 Each thread has it own work list, for saving its unvisited state.
 New state will be inserted into the head of the list. 
 Other threads will rob the state from the tail, which is close to the search root. So that we can minimize the thread communications.
 
-2. State Masks and Sudoku board.
+**2. State Masks and Sudoku board.**
 
 Each thread has a set of state masks and sudoku board for doing DFS and backtracking.
 
