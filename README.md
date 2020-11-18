@@ -73,7 +73,7 @@ Thus, a openmp_lock for each thread's masks is needed.
 
 
 
-### Run
+### How to Run the Sudoku Sovler
 
 ```shell
 mkdir build
@@ -82,4 +82,9 @@ cmake ..
 make
 ./sudoku-solver <sudoku-file>
 ```
+
+### Meaning of each file
+
+- sdf
+- sdf
 
