@@ -13,7 +13,7 @@ make
 ```
 Run the sudoku-solver to solve <sudoku-file> puzzle.
 ```shell
-./sudoku-solver <sudoku-file>
+./sudoku-solver <sudoku-file> <number_of_threads>
 ```
 
 ### Meaning of each file
@@ -81,14 +81,25 @@ Thus, a openmp_lock for each thread's masks is needed.
 
 ### Experiments and Results
 
+Finally we have done scalability analysis of this sudoku solver. We conduct experiment on 16 by 16 sudoku.
+
 **Execution Time for 16x16 Sudoku**
+
 ![exec_time_16](pic/exec_time_16.png)
 
+Sudoku solver achieved minimum execution time with 6 threads.
+
 **Speed Up for 16x16 Sudoku**
+
 ![speed_up_16](pic/speed_up_16.png)
 
+Speed up is defined as the ratio of single thread runtime to multithread runtime. Sudoku solver achieved best speed up with 6 threads.
+
 **Efficiency for 16x16 Sudoku**
+
 ![efficiency_16](pic/efficiency_16.png)
+
+Efficiency is defined as the ratio of speedup to the number of processors. Efficiency measures the fraction of time for which a processor is usefully utilized. We get the best efficiency when using 4 threads.
 
 
 
