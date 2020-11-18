@@ -2,7 +2,7 @@
 
 In 2020 fall CSCI 596 final project, we build a parallel sudoku solver using OpenMP to parallelize backtracking algorithm on Sudoku. 
 
-### How to Run the Sudoku Sovler
+## How to Run the Sudoku Sovler
 
 Follow these in the root directory to compile the C file.
 ```shell
@@ -16,7 +16,7 @@ Run the sudoku-solver to solve <sudoku-file> puzzle.
 ./sudoku-solver <sudoku-file> <number_of_threads>
 ```
 
-### Meaning of each file
+## Meaning of each file
 
 - sudoku.c: the main program of parallel sudoku solver
 - list.c: definition and operations of the work list
@@ -24,13 +24,13 @@ Run the sudoku-solver to solve <sudoku-file> puzzle.
 - CMakeLists.txt: Guide the compiler to automatically generate the makefile stuff
 
 
-### What is Sudoku
+## What is Sudoku
 Sudoku is a logic-based number puzzle featuring a 9x9 board divided into rows, columns, and 3x3 square blocks. The goal of the game is to fill each row, column, and block with unique numbers in the range 1 through 9. Variations of sudoku have used larger boards, such as hexadoku: sudoku with a 16x16 board.
 
 ![standard-sudoku-example-from-wiki](pic/sudoku-example.png)
 
 
-#### Rules (for standard Sudoku)
+### Rules (for standard Sudoku)
 
 1. A standard Sudoku contains 81 cells in a 9 by 9 grid. 
 
@@ -38,23 +38,23 @@ Sudoku is a logic-based number puzzle featuring a 9x9 board divided into rows, c
 
 3. Each number can only occur once in each row, column, and 3 by 3 box.
 
-#### Commonly Algorithms
+### Commonly Algorithms
 
 1. **Brute Force**: Require a long execution time.
 2. **Humanistic Algorithm**: Quick solving method but it may not solve a Sudoku if not applying other methods.
 3. **Backtracking**: Performing DFS with pruning strategy, guaranteeing a solution if it exists.
 
 
-### Parallel DFS
+## Parallel DFS
 
 Noticing that order of DFS won't change the solution of Sudoku, we could parallelize our DFS procedure.
 
-#### Challenges
+### Challenges
 
 - How to aviod race conditions when different communicate?
 - How to make fully use of each thread? Which means how to assign new job to idle thread.
 
-#### Our Solution
+### Our Solution
 
 Initially, each thread starts at a different state and perform single thread searching strategy.
 
@@ -62,9 +62,9 @@ Once a thread is idle (finishing its current work), it tries to find some works 
 
 ![parallel-dfs](pic/parallel-dfs.png)
 
-### How to solve Race Condition
+## How to solve Race Condition
 
-#### Race condition on work list
+### Race condition on work list
 
 Each thread holds a work list to track its current state and record the remaining work. When one thread finishes its work, it tries to find other works from other threads by examining work lists of other threads.
 
@@ -72,13 +72,13 @@ Work list will be read and changed by different threads when a robbery occurs, w
  
 Work list is designed as an concurrent doubly linked list, and we use openmp_lock to ensure read-after-write consistency.
 
-#### Race condition on masks updates
+### Race condition on masks updates
 
 Once robbery occurred, one thread needs to copy masks from another thread. Data consistency must be guaranteed during the copy process. 
 
 Thus, a openmp_lock for each thread's masks is needed.
 
-### Data Structure we used for solving race conditions
+## Data Structure we used for solving race conditions
 
 **1. Concurrent Doubly Linked List (work list)**
 
@@ -90,7 +90,7 @@ Other threads will rob the state from the tail, which is close to the search roo
 
 Each thread has a set of state masks and sudoku board for doing DFS and backtracking.
 
-#### An example of parallel DFS traversal
+### An example of parallel DFS traversal
 
 ![dfs-step1](pic/dfs-step1.png)
 ![dfs-step2](pic/dfs-step2.png)
@@ -102,7 +102,7 @@ Each thread has a set of state masks and sudoku board for doing DFS and backtrac
 ![dfs-step8](pic/dfs-step8.png)
 
 
-### Experiments and Results
+## Experiments and Results
 
 Finally we have done scalability analysis of this sudoku solver. Due to 9 by 9 sudoku is way to fast to be solved, we conduct experiment on 16 by 16 sudoku.
 
