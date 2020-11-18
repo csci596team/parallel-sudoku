@@ -51,7 +51,7 @@ Noticing that order of DFS won't change the solution of Sudoku, we could paralle
 
 ### Challenges
 
-- How to aviod race conditions when different communicate?
+- How to avoid race conditions when different threads communicate?
 - How to make fully use of each thread? Which means how to assign new job to idle thread.
 
 ### Our Solution
