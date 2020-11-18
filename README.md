@@ -67,9 +67,9 @@ Once a thread is idle (finishing its current work), it tries to find some works 
 ![dfs-step8](pic/dfs-step8.png)
 
 
-#### Race Condition
+### Race Condition
 
-##### Race condition on work list
+#### Race condition on work list
 
 Each thread holds a work list to track its current state and record the remaining work. When one thread finishes its work, it tries to find other works from other threads by examining work lists of other threads.
 
@@ -77,7 +77,7 @@ Work list will be read and changed by different threads when a robbery occurs, w
  
 Work list is designed as an concurrent doubly linked list, and we use openmp_lock to ensure read-after-write consistency.
 
-##### Race condition on masks updates
+#### Race condition on masks updates
 
 Once robbery occurred, one thread needs to copy masks from another thread. Data consistency must be guaranteed during the copy process. 
 Thus, a openmp_lock for each thread's masks is needed.
@@ -85,7 +85,7 @@ Thus, a openmp_lock for each thread's masks is needed.
 
 ### Experiments and Results
 
-Finally we have done scalability analysis of this sudoku solver. We conduct experiment on 16 by 16 sudoku.
+Finally we have done scalability analysis of this sudoku solver. Due to 9 by 9 sudoku is way to fast to be solved, we conduct experiment on 16 by 16 sudoku.
 
 **Execution Time for 16x16 Sudoku**
 
