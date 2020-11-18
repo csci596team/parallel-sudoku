@@ -2,6 +2,26 @@
 
 In 2020 fall CSCI 596 final project, we build a parallel sudoku solver using OpenMP to parallelize backtracking algorithm on Sudoku.
 
+### How to Run the Sudoku Sovler
+
+Follow these in the root directory to compile the C file.
+```shell
+mkdir build
+cd build
+cmake ..
+make
+```
+Run the sudoku-solver to solve <sudoku-file> puzzle.
+```shell
+./sudoku-solver <sudoku-file>
+```
+
+### Meaning of each file
+
+- sudoku.c: the main program of parallel sudoku solver
+- list.c: definition and operations of the work list
+- list.h: header file for list.c
+- CMakeLists.txt: Guide the compiler to automatically generate the makefile stuff
 
 
 ### What is Sudoku
@@ -19,7 +39,6 @@ In 2020 fall CSCI 596 final project, we build a parallel sudoku solver using Ope
 1. **Brute Force**: Require a long execution time.
 2. **Humanistic Algorithm**: Quick solving method but it may not solve a Sudoku if not applying other methods.
 3. **Backtracking**: Performing DFS with pruning strategy, guaranteeing a solution if it exists.
-
 
 
 ### Parallel DFS
@@ -72,25 +91,4 @@ Thus, a openmp_lock for each thread's masks is needed.
 ![efficiency_16](pic/efficiency_16.png)
 
 
-
-### How to Run the Sudoku Sovler
-
-Follow these in the root directory to compile the C file.
-```shell
-mkdir build
-cd build
-cmake ..
-make
-```
-Run the sudoku-solver to solve <sudoku-file> puzzle.
-```shell
-./sudoku-solver <sudoku-file>
-```
-
-### Meaning of each file
-
-- sudoku.c: the main program of parallel sudoku solver
-- list.c: definition and operations of the work list
-- list.h: header file for list.c
-- CMakeLists.txt: Guide the compiler to automatically generate the makefile stuff
 
