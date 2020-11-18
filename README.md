@@ -49,13 +49,36 @@ Sudoku is a logic-based number puzzle featuring a 9x9 board divided into rows, c
 
 Noticing that order of DFS won't change the solution of Sudoku, we could parallelize our DFS procedure.
 
+#### Challenges
+
+- How to aviod race conditions when different communicate?
+- How to make fully use of each thread? Which means how to assign new job to idle thread.
+
+#### Our Solution
+
 Initially, each thread starts at a different state and perform single thread searching strategy.
 
-Once a thread is idle (finishing its current work), it tries to find some works from other threads.
+Once a thread is idle (finishing its current work), it tries to find some works from other threads in order to make fully use of each thread.
 
 ![parallel-dfs](pic/parallel-dfs.png)
 
-### Data Structure we used for enabling parallelization
+### How to solve Race Condition
+
+#### Race condition on work list
+
+Each thread holds a work list to track its current state and record the remaining work. When one thread finishes its work, it tries to find other works from other threads by examining work lists of other threads.
+
+Work list will be read and changed by different threads when a robbery occurs, which cause a race condition.
+ 
+Work list is designed as an concurrent doubly linked list, and we use openmp_lock to ensure read-after-write consistency.
+
+#### Race condition on masks updates
+
+Once robbery occurred, one thread needs to copy masks from another thread. Data consistency must be guaranteed during the copy process. 
+
+Thus, a openmp_lock for each thread's masks is needed.
+
+### Data Structure we used for solving race conditions
 
 **1. Concurrent Doubly Linked List (work list)**
 
@@ -77,22 +100,6 @@ Each thread has a set of state masks and sudoku board for doing DFS and backtrac
 ![dfs-step6](pic/dfs-step6.png)
 ![dfs-step7](pic/dfs-step7.png)
 ![dfs-step8](pic/dfs-step8.png)
-
-
-### Race Condition
-
-#### Race condition on work list
-
-Each thread holds a work list to track its current state and record the remaining work. When one thread finishes its work, it tries to find other works from other threads by examining work lists of other threads.
-
-Work list will be read and changed by different threads when a robbery occurs, which cause a race condition.
- 
-Work list is designed as an concurrent doubly linked list, and we use openmp_lock to ensure read-after-write consistency.
-
-#### Race condition on masks updates
-
-Once robbery occurred, one thread needs to copy masks from another thread. Data consistency must be guaranteed during the copy process. 
-Thus, a openmp_lock for each thread's masks is needed.
 
 
 ### Experiments and Results
