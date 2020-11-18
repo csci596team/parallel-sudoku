@@ -75,16 +75,22 @@ Thus, a openmp_lock for each thread's masks is needed.
 
 ### How to Run the Sudoku Sovler
 
+Follow these in the root directory to compile the C file.
 ```shell
 mkdir build
 cd build
 cmake ..
 make
+```
+Run the sudoku-solver to solve <sudoku-file> puzzle.
+```shell
 ./sudoku-solver <sudoku-file>
 ```
 
 ### Meaning of each file
 
-- sdf
-- sdf
+- sudoku.c: the main program of parallel sudoku solver
+- list.c: definition and operations of the work list
+- list.h: header file for list.c
+- CMakeLists.txt: Guide the compiler to automatically generate the makefile stuff
 
