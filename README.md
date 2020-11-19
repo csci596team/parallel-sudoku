@@ -93,7 +93,9 @@ Other threads will rob the state from the tail, which is close to the search roo
 
 **2. State Masks and Sudoku board.**
 
-Each thread has a set of state masks and sudoku board for doing DFS and backtracking.
+Each thread has a set of state masks and sudoku board for doing DFS and backtracking.  
+
+When robbery happen, the idle thread will copy all the masks and board information of the robbed thread. So that the idle thread can keep searching base on the robbed state.
 
 ## An example of parallel DFS traversal
 
