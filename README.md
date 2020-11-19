@@ -44,10 +44,15 @@ Sudoku is a logic-based number puzzle featuring a 9x9 board divided into rows, c
 2. **Humanistic Algorithm**: Quick solving method but it may not solve a Sudoku if not applying other methods.
 3. **Backtracking**: Performing DFS with pruning strategy, guaranteeing a solution if it exists.
 
-
 ## Parallel DFS
 
 Noticing that order of DFS won't change the solution of Sudoku, we could parallelize our DFS procedure.
+
+### Why Important
+
+DFS and backtracking is a critical and wildly used algorithm in computer science field, it is used almost everywhere.
+And some problems are NP-hard which means they are time consuming when the search spaces are huge.
+So it's important to parallel the DFS and backtracking procedure to speed up the program.
 
 ### Challenges
 
